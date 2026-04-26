@@ -1,0 +1,212 @@
+[
+  {
+    "name": "ChatGPT",
+    "description": "نموذج لغة ذكي يساعدك في الكتابة والحوار والبرمجة",
+    "category": "Writing",
+    "url": "https://chat.openai.com"
+  },
+  {
+    "name": "Midjourney",
+    "description": "أداة توليد الصور الاحترافية من النصوص",
+    "category": "Image",
+    "url": "https://www.midjourney.com"
+  },
+  {
+    "name": "GitHub Copilot",
+    "description": "مساعد برمجي ذكي لكتابة الأكواد تلقائياً",
+    "category": "Code",
+    "url": "https://github.com/features/copilot"
+  },
+  {
+    "name": "ElevenLabs",
+    "description": "تحويل النصوص إلى كلام بصوت طبيعي عالي الجودة",
+    "category": "Voice",
+    "url": "https://elevenlabs.io"
+  },
+  {
+    "name": "Sora",
+    "description": "توليد فيديوهات احترافية من النصوص بتقنية OpenAI",
+    "category": "Video",
+    "url": "https://openai.com/sora"
+  },
+  {
+    "name": "Claude",
+    "description": "مساعد ذكي من Anthropic للكتابة والتحليل والبرمجة",
+    "category": "Writing",
+    "url": "https://claude.ai"
+  },
+  {
+    "name": "Runway ML",
+    "description": "أدوات إنتاج الفيديو والصور الإبداعية بالذكاء الاصطناعي",
+    "category": "Video",
+    "url": "https://runwayml.com"
+  },
+  {
+    "name": "Stable Diffusion",
+    "description": "توليد الصور من النصوص مفتوح المصدر قابل للتخصيص",
+    "category": "Image",
+    "url": "https://stablediffusionweb.com"
+  },
+  {
+    "name": "Whisper",
+    "description": "تحويل الكلام إلى نصوص بدقة عالية ودعم متعدد اللغات",
+    "category": "Voice",
+    "url": "https://openai.com/research/whisper"
+  },
+  {
+    "name": "Copy.ai",
+    "description": "كاتب نصوص ذكي للإعلانات والمحتوى التسويقي",
+    "category": "Writing",
+    "url": "https://www.copy.ai"
+  },
+  {
+    "name": "Tabnine",
+    "description": "إكمال تلقائي للأكواد يعمل مع جميع محررات النصوص",
+    "category": "Code",
+    "url": "https://www.tabnine.com"
+  },
+  {
+    "name": "Synthesia",
+    "description": "إنشاء فيديوهات احترافية بأفاتارات بشرية ذكية",
+    "category": "Video",
+    "url": "https://www.synthesia.io"
+  },
+  {
+    "name": "Notion AI",
+    "description": "مساعد ذكي مدمج في تطبيق Notion لتنظيم المعرفة",
+    "category": "Productivity",
+    "url": "https://www.notion.so"
+  },
+  {
+    "name": "Perplexity AI",
+    "description": "محرك بحث ذكي يجيب على أسئلتك بمصادر موثقة",
+    "category": "Search",
+    "url": "https://www.perplexity.ai"
+  },
+  {
+    "name": "Jasper AI",
+    "description": "منصة كتابة محتوى احترافية للتسويق والأعمال",
+    "category": "Writing",
+    "url": "https://www.jasper.ai"
+  },
+  {
+    "name": "Gemini",
+    "description": "نموذج لغة متعدد الوسائط من Google لمعالجة النصوص والصور",
+    "category": "Chat",
+    "url": "https://gemini.google.com"
+  },
+  {
+    "name": "Grok",
+    "description": "مساعد ذكاء اصطناعي من xAI بوصول مباشر لبيانات منصة X",
+    "category": "Chat",
+    "url": "https://grok.x.ai"
+  },
+  {
+    "name": "Character.ai",
+    "description": "منصة لإنشاء شخصيات ذكاء اصطناعي والتحدث معها بحرية",
+    "category": "Chat",
+    "url": "https://character.ai"
+  },
+  {
+    "name": "Microsoft Copilot",
+    "description": "مساعد ذكي مدمج في منتجات Microsoft 365 والويب",
+    "category": "Chat",
+    "url": "https://copilot.microsoft.com"
+  },
+  {
+    "name": "Adobe Firefly",
+    "description": "أداة توليد الصور الاحترافية من Adobe للمصممين الإبداعيين",
+    "category": "Image",
+    "url": "https://firefly.adobe.com"
+  },
+  {
+    "name": "DALL-E 3",
+    "description": "توليد صور فائقة الدقة والإبداع من النصوص بتقنية OpenAI",
+    "category": "Image",
+    "url": "https://openai.com/dall-e-3"
+  },
+  {
+    "name": "Ideogram",
+    "description": "توليد صور مع نصوص دقيقة وقابلة للقراءة بجودة عالية",
+    "category": "Image",
+    "url": "https://ideogram.ai"
+  },
+  {
+    "name": "Leonardo AI",
+    "description": "منصة توليد صور متخصصة في الألعاب والفنون الرقمية",
+    "category": "Image",
+    "url": "https://leonardo.ai"
+  },
+  {
+    "name": "Pika Labs",
+    "description": "تحويل الصور والنصوص إلى فيديوهات سينمائية احترافية",
+    "category": "Video",
+    "url": "https://pika.art"
+  },
+  {
+    "name": "HeyGen",
+    "description": "إنشاء فيديوهات ترويجية بأفاتارات بشرية واقعية متعددة اللغات",
+    "category": "Video",
+    "url": "https://www.heygen.com"
+  },
+  {
+    "name": "Descript",
+    "description": "تحرير الصوت والفيديو بسهولة من خلال تعديل النص المكتوب",
+    "category": "Video",
+    "url": "https://www.descript.com"
+  },
+  {
+    "name": "Pictory AI",
+    "description": "تحويل المقالات والنصوص الطويلة إلى فيديوهات قصيرة جذابة",
+    "category": "Video",
+    "url": "https://pictory.ai"
+  },
+  {
+    "name": "Cursor",
+    "description": "محرر كود ذكي مبني على VS Code مع مساعد AI متكامل",
+    "category": "Code",
+    "url": "https://cursor.sh"
+  },
+  {
+    "name": "Codeium",
+    "description": "إكمال الأكواد الذكي المجاني يدعم أكثر من 70 لغة برمجية",
+    "category": "Code",
+    "url": "https://codeium.com"
+  },
+  {
+    "name": "Replit AI",
+    "description": "بيئة برمجة سحابية متكاملة مع مساعد ذكاء اصطناعي قوي",
+    "category": "Code",
+    "url": "https://replit.com"
+  },
+  {
+    "name": "Murf AI",
+    "description": "توليد أصوات بشرية احترافية للعروض والمحتوى التعليمي",
+    "category": "Voice",
+    "url": "https://murf.ai"
+  },
+  {
+    "name": "PlayHT",
+    "description": "تحويل النص إلى كلام طبيعي بأكثر من 900 صوت بشري",
+    "category": "Voice",
+    "url": "https://play.ht"
+  },
+  {
+    "name": "Otter.ai",
+    "description": "تسجيل الاجتماعات وتحويلها إلى نصوص وملخصات تلقائياً",
+    "category": "Voice",
+    "url": "https://otter.ai"
+  },
+  {
+    "name": "Canva AI",
+    "description": "أداة التصميم الذكية مع قوالب جاهزة لكل المناسبات والأعمال",
+    "category": "Design",
+    "url": "https://www.canva.com"
+  },
+  {
+    "name": "Writesonic",
+    "description": "منصة كتابة محتوى تسويقي واحترافي بالذكاء الاصطناعي",
+    "category": "Writing",
+    "url": "https://writesonic.com"
+  }
+]
