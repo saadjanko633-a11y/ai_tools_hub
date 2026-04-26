@@ -262,7 +262,7 @@ class ToolsListScreen extends StatefulWidget {
 class _ToolsListScreenState extends State<ToolsListScreen> {
   final _searchCtrl = TextEditingController();
   String _query = '';
-  String? _category;
+  ToolCategory? _category;
 
   @override
   void dispose() {
@@ -541,8 +541,12 @@ class ToolCard extends StatelessWidget {
                                   color: color.withValues(alpha: 0.25),
                                   width: 1),
                             ),
-                            child: Icon(categoryIcon(tool.category),
-                                color: color, size: 26),
+                            child: Center(
+                              child: Text(
+                                tool.icon,
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           // Name + badge
@@ -727,8 +731,10 @@ class ToolDetailScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: Icon(categoryIcon(tool.category),
-                            color: color, size: 42),
+                        child: Text(
+                          tool.icon,
+                          style: const TextStyle(fontSize: 42),
+                        ),
                       ),
                       const SizedBox(height: 14),
                       Text(
