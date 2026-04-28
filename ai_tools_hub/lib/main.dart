@@ -878,28 +878,33 @@ class ToolDetailScreen extends StatelessWidget {
 
   Future<void> _launch(
       BuildContext context, String url, bool isAr) async {
-    try {
-      final uri = Uri.parse(url);
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        throw Exception('Cannot launch');
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isAr ? 'تعذّر فتح الرابط' : 'Could not open the link',
-              style: GoogleFonts.cairo(),
-            ),
-            backgroundColor: Colors.red.shade800,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https') {
+      _showLaunchError(context, isAr);
+      return;
     }
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) _showLaunchError(context, isAr);
+    } on Exception {
+      if (context.mounted) _showLaunchError(context, isAr);
+    }
+  }
+
+  void _showLaunchError(BuildContext context, bool isAr) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isAr ? 'تعذّر فتح الرابط' : 'Could not open the link',
+          style: GoogleFonts.cairo(),
+        ),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 }
 
