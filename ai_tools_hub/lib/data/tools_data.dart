@@ -124,6 +124,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.5,
+    tags: ['Open Source'],
   ),
   AiTool(
     id: 'firefly',
@@ -338,6 +339,7 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: true,
     rating: 4.7,
+    tags: ['IDE'],
   ),
   AiTool(
     id: '26',
@@ -351,6 +353,7 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: true,
     rating: 4.8,
+    tags: ['IDE'],
   ),
   AiTool(
     id: '27',
@@ -364,6 +367,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    tags: ['IDE'],
   ),
   AiTool(
     id: '28',
@@ -377,6 +381,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.5,
+    tags: ['Privacy', 'IDE'],
   ),
   AiTool(
     id: '29',
@@ -390,6 +395,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.4,
+    tags: ['Cloud', 'Collaboration'],
   ),
   AiTool(
     id: '30',
@@ -429,6 +435,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.7,
+    tags: ['IDE'],
   ),
 
   // ── Education ─────────────────────────────────────────────────────────────────
@@ -457,6 +464,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    tags: ['Mobile'],
   ),
   AiTool(
     id: '35',
@@ -483,6 +491,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    tags: ['Mobile'],
   ),
   AiTool(
     id: '37',
@@ -496,6 +505,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.7,
+    tags: ['Mobile', 'Math'],
   ),
   AiTool(
     id: '38',
@@ -550,6 +560,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    tags: ['CRM', 'Enterprise'],
   ),
   AiTool(
     id: '42',
@@ -602,6 +613,7 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: false,
     rating: 4.6,
+    tags: ['SEO'],
   ),
   AiTool(
     id: '46',
@@ -615,6 +627,7 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: false,
     rating: 4.7,
+    tags: ['SEO'],
   ),
   AiTool(
     id: '47',
@@ -656,6 +669,7 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: false,
     rating: 4.7,
+    tags: ['Collaboration'],
   ),
   AiTool(
     id: '50',
@@ -708,6 +722,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.5,
+    tags: ['Meetings'],
   ),
   AiTool(
     id: '54',
@@ -721,6 +736,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    tags: ['Meetings'],
   ),
   AiTool(
     id: '55',
@@ -827,6 +843,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.2,
+    tags: ['Privacy'],
   ),
   AiTool(
     id: '63',
@@ -868,6 +885,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.8,
+    tags: ['Collaboration'],
   ),
   AiTool(
     id: '66',
@@ -1013,6 +1031,7 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: true,
     rating: 4.4,
+    tags: ['No-Code'],
   ),
   AiTool(
     id: '77',
@@ -1026,6 +1045,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.3,
+    tags: ['API'],
   ),
   AiTool(
     id: '78',
@@ -1106,6 +1126,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.5,
+    tags: ['Multi-Model'],
   ),
   AiTool(
     id: '84',
@@ -1132,6 +1153,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.4,
+    tags: ['Open Source', 'Privacy'],
   ),
   AiTool(
     id: '86',
@@ -1210,6 +1232,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.3,
+    isNew: true,
   ),
   AiTool(
     id: '92',
@@ -1223,6 +1246,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.4,
+    isNew: true,
   ),
 
   // ── Writing (additional) ──────────────────────────────────────────────────────
@@ -1238,6 +1262,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    isNew: true,
   ),
   AiTool(
     id: '94',
@@ -1251,6 +1276,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.5,
+    isNew: true,
   ),
 
   // ── Image (additional) ────────────────────────────────────────────────────────
@@ -1266,6 +1292,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.4,
+    isNew: true,
   ),
   AiTool(
     id: '96',
@@ -1279,6 +1306,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.4,
+    isNew: true,
   ),
 
   // ── Coding (additional) ───────────────────────────────────────────────────────
@@ -1294,6 +1322,8 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: true,
     rating: 4.4,
+    tags: ['Cloud'],
+    isNew: true,
   ),
   AiTool(
     id: '98',
@@ -1307,6 +1337,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.6,
+    isNew: true,
   ),
 
   // ── Chat (additional) ─────────────────────────────────────────────────────────
@@ -1322,6 +1353,7 @@ const List<AiTool> kAllTools = [
     isFree: true,
     hasFreePlan: true,
     rating: 4.5,
+    isNew: true,
   ),
   AiTool(
     id: '100',
@@ -1335,6 +1367,8 @@ const List<AiTool> kAllTools = [
     isFree: false,
     hasFreePlan: true,
     rating: 4.4,
+    tags: ['Enterprise', 'API'],
+    isNew: true,
   ),
 ];
 

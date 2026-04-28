@@ -42,3 +42,22 @@ class FavService extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+class ThemeService extends ChangeNotifier {
+  static const _key = 'theme_mode';
+  final SharedPreferences _prefs;
+  late ThemeMode _mode;
+
+  ThemeService(this._prefs) {
+    final saved = _prefs.getInt(_key) ?? 0;
+    _mode = ThemeMode.values[saved.clamp(0, ThemeMode.values.length - 1)];
+  }
+
+  ThemeMode get mode => _mode;
+
+  void setMode(ThemeMode mode) {
+    _mode = mode;
+    _prefs.setInt(_key, mode.index);
+    notifyListeners();
+  }
+}

@@ -78,6 +78,8 @@ class AiTool {
   final bool isFree;
   final bool hasFreePlan;
   final double rating;
+  final List<String> tags;
+  final bool isNew;
 
   const AiTool({
     required this.id,
@@ -91,8 +93,46 @@ class AiTool {
     required this.isFree,
     required this.hasFreePlan,
     required this.rating,
+    this.tags = const [],
+    this.isNew = false,
   });
 
   String localName(bool isArabic) => isArabic ? nameAr : nameEn;
   String localDesc(bool isArabic) => isArabic ? descriptionAr : descriptionEn;
+
+  List<String> displayTags(bool isAr) {
+    final result = <String>[];
+    if (isFree) {
+      result.add(isAr ? 'مجاني' : 'Free');
+    } else if (hasFreePlan) {
+      result.add(isAr ? 'نسخة مجانية' : 'Free Plan');
+    }
+    if (rating >= 4.7) result.add(isAr ? 'الأعلى تقييماً' : 'Top Rated');
+    for (final tag in tags) {
+      result.add(_localizeTag(tag, isAr));
+    }
+    return result;
+  }
+
+  static String _localizeTag(String tag, bool isAr) {
+    if (!isAr) return tag;
+    const map = {
+      'Open Source': 'مفتوح المصدر',
+      'Mobile': 'موبايل',
+      'Enterprise': 'مؤسسي',
+      'API': 'API',
+      'IDE': 'IDE',
+      'Privacy': 'خصوصية',
+      'No-Code': 'بدون كود',
+      'Collaboration': 'تعاون',
+      'Multi-Model': 'متعدد النماذج',
+      'CRM': 'CRM',
+      'Cloud': 'سحابي',
+      'Math': 'رياضيات',
+      'SEO': 'SEO',
+      'Meetings': 'اجتماعات',
+      'Music': 'موسيقى',
+    };
+    return map[tag] ?? tag;
+  }
 }
