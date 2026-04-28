@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,7 +19,8 @@ const kBorder    = Color(0xFF2A2F52);
 
 // ─── Entry ────────────────────────────────────────────────────────────────────
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   final prefs = await SharedPreferences.getInstance();
   runApp(MultiProvider(
     providers: [
@@ -27,6 +29,7 @@ void main() async {
     ],
     child: const MyApp(),
   ));
+  FlutterNativeSplash.remove();
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────

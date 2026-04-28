@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze *)",
+      "Bash(flutter emulators *)",
+      "Bash(flutter run *)",
+      "Bash(grep -qE \"Boot complete|^1$\" \"C:/Users/delll/AppData/Local/Temp/claude/c--SRC-ai-tools-hub/f5c93890-050c-4229-8a3b-8da75a5f8d10/tasks/b8h7qg78l.output\")",
+      "Bash(flutter build *)",
+      "Bash(flutter pub *)"
+    ]
+  }
+}
