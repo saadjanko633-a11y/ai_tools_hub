@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../services/app_service.dart';
+import '../theme/app_colors.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,7 +14,7 @@ class SettingsScreen extends StatelessWidget {
     final lang = context.watch<LangService>();
     final theme = context.watch<ThemeService>();
     final isAr = lang.isArabic;
-    final scheme = _AppScheme.of(context);
+    final scheme = AppColors.of(context);
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -222,7 +223,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _sectionTitle(String title, bool isAr, _AppScheme scheme) {
+  Widget _sectionTitle(String title, bool isAr, AppColors scheme) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, right: 4, bottom: 2),
       child: Text(
@@ -249,7 +250,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showPlaceholder(
-      BuildContext context, _AppScheme scheme, String title, String message) {
+      BuildContext context, AppColors scheme, String title, String message) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -272,47 +273,9 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-// ─── Helper to access theme-aware colors ──────────────────────────────────────
-class _AppScheme {
-  final Color bg;
-  final Color card;
-  final Color surface;
-  final Color border;
-  final Color textPrimary;
-  final Color textSecondary;
-  final Color textTertiary;
-  final bool isDark;
-
-  const _AppScheme({
-    required this.bg,
-    required this.card,
-    required this.surface,
-    required this.border,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.textTertiary,
-    required this.isDark,
-  });
-
-  static _AppScheme of(BuildContext context) {
-    final bright = Theme.of(context).brightness;
-    final dark = bright == Brightness.dark;
-    return _AppScheme(
-      bg: dark ? const Color(0xFF0A0E27) : const Color(0xFFF3F4F6),
-      card: dark ? const Color(0xFF1A1F3A) : Colors.white,
-      surface: dark ? const Color(0xFF131729) : Colors.white,
-      border: dark ? const Color(0xFF2A2F52) : const Color(0xFFE5E7EB),
-      textPrimary: dark ? Colors.white : const Color(0xFF111827),
-      textSecondary: dark ? const Color(0xB3FFFFFF) : const Color(0xFF374151),
-      textTertiary: dark ? const Color(0x61FFFFFF) : const Color(0xFF9CA3AF),
-      isDark: dark,
-    );
-  }
-}
-
 // ─── Reusable widgets ─────────────────────────────────────────────────────────
 class _SettingsCard extends StatelessWidget {
-  final _AppScheme scheme;
+  final AppColors scheme;
   final List<Widget> children;
 
   const _SettingsCard({required this.scheme, required this.children});
@@ -331,7 +294,7 @@ class _SettingsCard extends StatelessWidget {
 }
 
 class _SettingsTile extends StatelessWidget {
-  final _AppScheme scheme;
+  final AppColors scheme;
   final IconData icon;
   final Color iconColor;
   final String title;
@@ -401,7 +364,7 @@ class _ThemeChip extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final Color color;
-  final _AppScheme scheme;
+  final AppColors scheme;
   final VoidCallback onTap;
 
   const _ThemeChip({
