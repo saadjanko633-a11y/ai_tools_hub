@@ -65,18 +65,20 @@ All 100 tools are declared as compile-time `const` in `lib/data/tools_data.dart`
 
 **Dynamic colors:** `AppColors.of(context)` reads `Theme.of(context).brightness` and returns an `AppColors` instance with `bg`, `card`, `surface`, `border`, `textPrimary`, `textSecondary`, `textTertiary`. Always call `AppColors.of(context)` inside `build()` — never cache it above `build()`.
 
-`_lightTheme()` / `_darkTheme()` in `main.dart` build the `ThemeData` objects including `NavigationBarThemeData` with `WidgetStateProperty` for icon/label colors. The `_AppScheme` class in `settings_screen.dart` is a local duplicate of this pattern used only within that file.
+`_lightTheme()` / `_darkTheme()` in `main.dart` build the `ThemeData` objects including `NavigationBarThemeData` with `WidgetStateProperty` for icon/label colors. All screens use `AppColors.of(context)` for dynamic colors — there is no duplicate color class.
 
 ### Screens
 
-All UI lives in `lib/main.dart` except the Settings screen:
+UI is split across focused files after refactoring:
 
-- **`HomeScreen`** — `Scaffold` with `_HubAppBar` + `IndexedStack` (3 tabs) + `NavigationBar`
-- **`ToolsListScreen`** — stateful; holds search query, active `ToolCategory?`, and `SortOrder`; `_filtered()` applies filter + sort over `kAllTools`; `_buildSortButton()` returns a `PopupMenuButton<SortOrder>` with 4 options (Default / Name A-Z / Rating Top / Newest First)
-- **`FavoritesScreen`** — reads `FavService.favorites`; shows empty state when none
-- **`ToolCard`** — card widget; shows NEW badge overlay when `tool.isNew`, tag chips via `tool.displayTags(isAr)`
-- **`ToolDetailScreen`** — pushed via `Navigator.push`; shows hero icon, star rating, tags, "Open in Browser" via `url_launcher`
+- **`HomeScreen`** (`lib/main.dart`) — `Scaffold` with `HubAppBar` + `IndexedStack` (4 tabs) + `NavigationBar`
+- **`ToolsListScreen`** (`lib/screens/tools_list_screen.dart`) — stateful; holds search query, active `ToolCategory?`, and `SortOrder`; `_filtered()` applies filter + sort over `kAllTools`; `_buildSortButton()` returns a `PopupMenuButton<SortOrder>` with 5 options (Default / Name A-Z / Rating Top / Newest First / Most Visited)
+- **`FavoritesScreen`** (`lib/screens/favorites_screen.dart`) — reads `FavService.favorites`; shows empty state when none
+- **`ToolCard`** (`lib/widgets/tool_card.dart`) — card widget; shows NEW badge overlay when `tool.isNew`, tag chips via `tool.displayTags(isAr)`
+- **`ToolDetailScreen`** (`lib/screens/tool_detail_screen.dart`) — pushed via `Navigator.push`; shows hero icon, star rating, tags, "Open in Browser" via `url_launcher`
 - **`SettingsScreen`** (`lib/screens/settings_screen.dart`) — language Switch, theme chips (Light/Dark/System), app info, share via `share_plus`
+- **`HubAppBar`** (`lib/widgets/hub_app_bar.dart`) — app bar with logo, subtitle, language toggle
+- **`CategoryChip`** (`lib/widgets/category_chip.dart`) — filter chip used in ToolsListScreen
 
 ### Adding a New Tool
 
