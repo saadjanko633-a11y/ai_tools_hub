@@ -80,6 +80,7 @@ class AiTool {
   final double rating;
   final List<String> tags;
   final bool isNew;
+  final bool isFeatured;
 
   const AiTool({
     required this.id,
@@ -95,6 +96,7 @@ class AiTool {
     required this.rating,
     this.tags = const [],
     this.isNew = false,
+    this.isFeatured = false,
   });
 
   String localName(bool isArabic) => isArabic ? nameAr : nameEn;

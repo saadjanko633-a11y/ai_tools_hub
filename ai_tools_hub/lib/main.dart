@@ -1,55 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'data/tools_data.dart';
 import 'models/ai_tool.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/recent_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/app_service.dart';
-
-// ─── Theme-independent constants ──────────────────────────────────────────────
-const kPrimary   = Color(0xFF6366F1);
-const kSecondary = Color(0xFF8B5CF6);
-
-// ─── Dynamic color helper ─────────────────────────────────────────────────────
-class AppColors {
-  final Color bg;
-  final Color card;
-  final Color surface;
-  final Color border;
-  final Color textPrimary;
-  final Color textSecondary;
-  final Color textTertiary;
-  final bool isDark;
-
-  const AppColors._({
-    required this.bg,
-    required this.card,
-    required this.surface,
-    required this.border,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.textTertiary,
-    required this.isDark,
-  });
-
-  static AppColors of(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return AppColors._(
-      bg:            dark ? const Color(0xFF0A0E27) : const Color(0xFFF3F4F6),
-      card:          dark ? const Color(0xFF1A1F3A) : Colors.white,
-      surface:       dark ? const Color(0xFF131729) : Colors.white,
-      border:        dark ? const Color(0xFF2A2F52) : const Color(0xFFE5E7EB),
-      textPrimary:   dark ? Colors.white             : const Color(0xFF111827),
-      textSecondary: dark ? const Color(0xB3FFFFFF)  : const Color(0xFF374151),
-      textTertiary:  dark ? const Color(0x61FFFFFF)  : const Color(0xFF9CA3AF),
-      isDark: dark,
-    );
-  }
-}
+import 'theme/app_colors.dart';
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 ThemeData _darkTheme() {
@@ -74,7 +38,7 @@ ThemeData _darkTheme() {
       labelTextStyle: WidgetStateProperty.resolveWith((s) {
         final sel = s.contains(WidgetState.selected);
         return GoogleFonts.cairo(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
           color: sel ? kPrimary : const Color(0x61FFFFFF),
         );
@@ -107,7 +71,7 @@ ThemeData _lightTheme() {
       labelTextStyle: WidgetStateProperty.resolveWith((s) {
         final sel = s.contains(WidgetState.selected);
         return GoogleFonts.cairo(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
           color: sel ? kPrimary : const Color(0xFF9CA3AF),
         );
@@ -123,36 +87,62 @@ void main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   final prefs = await SharedPreferences.getInstance();
+  final seenOnboarding = prefs.getBool('onboarding_seen') ?? false;
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (_) => LangService(prefs)),
       ChangeNotifierProvider(create: (_) => FavService(prefs)),
       ChangeNotifierProvider(create: (_) => ThemeService(prefs)),
+      ChangeNotifierProvider(create: (_) => ViewCountService(prefs)),
+      ChangeNotifierProvider(create: (_) => RecentService(prefs)),
     ],
-    child: const MyApp(),
+    child: MyApp(seenOnboarding: seenOnboarding),
   ));
   FlutterNativeSplash.remove();
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final bool seenOnboarding;
+  const MyApp({super.key, required this.seenOnboarding});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _navKey = GlobalKey<NavigatorState>();
+
+  void _onOnboardingDone() {
+    _navKey.currentState?.pushAndRemoveUntil(
+      PageRouteBuilder(
+        pageBuilder: (ctx2, a1, a2) => const HomeScreen(),
+        transitionDuration: const Duration(milliseconds: 500),
+        transitionsBuilder: (ctx2, anim, a2, child) =>
+            FadeTransition(opacity: anim, child: child),
+      ),
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer2<LangService, ThemeService>(
-      builder: (context, lang, themeService, child) => MaterialApp(
+      builder: (ctx, lang, themeService, _) => MaterialApp(
         title: 'AI Tools Hub',
         debugShowCheckedModeBanner: false,
+        navigatorKey: _navKey,
         themeMode: themeService.mode,
         theme: _lightTheme(),
         darkTheme: _darkTheme(),
-        builder: (ctx, widget) => Directionality(
+        builder: (bctx, navWidget) => Directionality(
           textDirection:
               lang.isArabic ? TextDirection.rtl : TextDirection.ltr,
-          child: widget!,
+          child: navWidget!,
         ),
-        home: const HomeScreen(),
+        home: widget.seenOnboarding
+            ? const HomeScreen()
+            : OnboardingScreen(onDone: _onOnboardingDone),
       ),
     );
   }
@@ -169,18 +159,40 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
 
+  void _openTool(AiTool tool) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (ctx2, a1, a2) => ToolDetailScreen(tool: tool),
+        transitionDuration: const Duration(milliseconds: 350),
+        transitionsBuilder: (ctx2, anim, a2, child) => SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+          child: child,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final lang  = context.watch<LangService>();
-    final isAr  = lang.isArabic;
-    final c     = AppColors.of(context);
+    final lang = context.watch<LangService>();
+    final isAr = lang.isArabic;
+    final c    = AppColors.of(context);
 
     return Scaffold(
       backgroundColor: c.bg,
       appBar: _HubAppBar(isArabic: isAr, onToggleLang: lang.toggle, colors: c),
       body: IndexedStack(
         index: _tab,
-        children: const [ToolsListScreen(), FavoritesScreen(), SettingsScreen()],
+        children: [
+          const ToolsListScreen(),
+          const FavoritesScreen(),
+          RecentScreen(onTap: _openTool),
+          const SettingsScreen(),
+        ],
       ),
       bottomNavigationBar: _buildNav(isAr, c),
     );
@@ -206,6 +218,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.favorite_outline_rounded),
             selectedIcon: const Icon(Icons.favorite_rounded),
             label: isAr ? 'المفضلة' : 'Favorites',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.history_outlined),
+            selectedIcon: const Icon(Icons.history_rounded),
+            label: isAr ? 'الأخيرة' : 'Recent',
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),
@@ -284,8 +301,7 @@ class _HubAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     Text(
                       isArabic ? 'أدوات الذكاء الاصطناعي' : 'AI Tools Directory',
-                      style: GoogleFonts.cairo(
-                          fontSize: 11, color: c.textTertiary),
+                      style: GoogleFonts.cairo(fontSize: 11, color: c.textTertiary),
                     ),
                   ],
                 ),
@@ -304,7 +320,8 @@ class _HubAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.language_rounded, size: 14, color: kPrimary),
+                      const Icon(Icons.language_rounded,
+                          size: 14, color: kPrimary),
                       const SizedBox(width: 5),
                       Text(
                         isArabic ? 'EN' : 'عر',
@@ -327,7 +344,7 @@ class _HubAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 // ─── Sort Order ───────────────────────────────────────────────────────────────
-enum SortOrder { defaultOrder, nameAsc, ratingDesc, newFirst }
+enum SortOrder { defaultOrder, nameAsc, ratingDesc, newFirst, mostVisited }
 
 // ─── Tools List Screen ────────────────────────────────────────────────────────
 class ToolsListScreen extends StatefulWidget {
@@ -339,7 +356,7 @@ class ToolsListScreen extends StatefulWidget {
 
 class _ToolsListScreenState extends State<ToolsListScreen> {
   final _searchCtrl = TextEditingController();
-  String _query       = '';
+  String _query        = '';
   ToolCategory? _category;
   SortOrder _sortOrder = SortOrder.defaultOrder;
 
@@ -349,9 +366,9 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
     super.dispose();
   }
 
-  List<AiTool> _filtered(bool isAr) {
+  List<AiTool> _filtered(bool isAr, ViewCountService viewCounts) {
     var list = kAllTools.where((t) {
-      final q = _query.toLowerCase();
+      final q        = _query.toLowerCase();
       final nameMatch = t.localName(isAr).toLowerCase().contains(q);
       final descMatch = t.localDesc(isAr).toLowerCase().contains(q);
       final catMatch  = _category == null || t.category == _category;
@@ -369,6 +386,9 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
           if (!a.isNew && b.isNew) return 1;
           return 0;
         });
+      case SortOrder.mostVisited:
+        list.sort((a, b) =>
+            viewCounts.getCount(b.id).compareTo(viewCounts.getCount(a.id)));
       case SortOrder.defaultOrder:
         break;
     }
@@ -377,12 +397,15 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAr   = context.watch<LangService>().isArabic;
-    final c      = AppColors.of(context);
-    final filtered = _filtered(isAr);
+    final isAr       = context.watch<LangService>().isArabic;
+    final viewCounts = context.watch<ViewCountService>();
+    final c          = AppColors.of(context);
+    final filtered   = _filtered(isAr, viewCounts);
+    final showFeatured = _query.isEmpty && _category == null;
 
     return Column(
       children: [
+        if (showFeatured) _buildFeaturedSection(isAr, c),
         _buildSearchSection(isAr, c),
         Expanded(
           child: filtered.isEmpty
@@ -390,10 +413,52 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   itemCount: filtered.length,
-                  itemBuilder: (_, i) => ToolCard(tool: filtered[i]),
+                  itemBuilder: (_, i) => _AnimatedCard(
+                    index: i,
+                    child: ToolCard(tool: filtered[i]),
+                  ),
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFeaturedSection(bool isAr, AppColors c) {
+    final featured = kAllTools.where((t) => t.isFeatured).toList();
+    if (featured.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border(bottom: BorderSide(color: c.border, width: 1)),
+      ),
+      padding: const EdgeInsets.fromLTRB(0, 14, 0, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Text(
+              isAr ? '✨ الأدوات المميزة' : '✨ Featured Tools',
+              style: GoogleFonts.cairo(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: c.textPrimary,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: featured.length,
+              itemBuilder: (_, i) =>
+                  _FeaturedCard(tool: featured[i], isAr: isAr, colors: c),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -450,7 +515,8 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
       style: GoogleFonts.cairo(color: c.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: isAr ? 'ابحث عن أداة...' : 'Search tools...',
-        hintStyle: GoogleFonts.cairo(color: c.textTertiary, fontSize: 14),
+        hintStyle:
+            GoogleFonts.cairo(color: c.textTertiary, fontSize: 14),
         prefixIcon:
             const Icon(Icons.search_rounded, color: kPrimary, size: 22),
         suffixIcon: _query.isNotEmpty
@@ -502,15 +568,15 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
             isAr ? 'بالتقييم (الأعلى)' : 'By Rating (Top)', c),
         _sortItem(SortOrder.newFirst, Icons.new_releases_rounded,
             isAr ? 'الأحدث أولاً' : 'Newest First', c),
+        _sortItem(SortOrder.mostVisited, Icons.visibility_rounded,
+            isAr ? 'الأكثر زيارة' : 'Most Visited', c),
       ],
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 48,
         height: 52,
         decoration: BoxDecoration(
-          color: isActive
-              ? kPrimary.withValues(alpha: 0.15)
-              : c.card,
+          color: isActive ? kPrimary.withValues(alpha: 0.15) : c.card,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isActive ? kPrimary.withValues(alpha: 0.5) : c.border,
@@ -547,6 +613,154 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
       ),
     );
   }
+}
+
+// ─── Featured Card ────────────────────────────────────────────────────────────
+class _FeaturedCard extends StatelessWidget {
+  final AiTool tool;
+  final bool isAr;
+  final AppColors colors;
+
+  const _FeaturedCard({
+    required this.tool,
+    required this.isAr,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = categoryColor(tool.category);
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (ctx2, a1, a2) => ToolDetailScreen(tool: tool),
+          transitionDuration: const Duration(milliseconds: 350),
+          transitionsBuilder: (ctx2, anim, a2, child) => SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(
+                CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
+        ),
+      ),
+      child: Container(
+        width: 138,
+        margin: const EdgeInsets.symmetric(horizontal: 5),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color, color.withValues(alpha: 0.65)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tool.icon, style: const TextStyle(fontSize: 26)),
+              const Spacer(),
+              Text(
+                tool.localName(isAr),
+                style: GoogleFonts.cairo(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 5),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded,
+                        size: 10, color: Colors.white),
+                    const SizedBox(width: 3),
+                    Text(
+                      tool.rating.toStringAsFixed(1),
+                      style: GoogleFonts.cairo(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Animated Card (staggered entry) ─────────────────────────────────────────
+class _AnimatedCard extends StatefulWidget {
+  final Widget child;
+  final int index;
+  const _AnimatedCard({required this.child, required this.index});
+
+  @override
+  State<_AnimatedCard> createState() => _AnimatedCardState();
+}
+
+class _AnimatedCardState extends State<_AnimatedCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _fade;
+  late Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    final delay = (widget.index * 40).clamp(0, 400);
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+        opacity: _fade,
+        child: SlideTransition(position: _slide, child: widget.child),
+      );
 }
 
 // ─── Category Chip ────────────────────────────────────────────────────────────
@@ -630,8 +844,8 @@ class _EmptyState extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: c.border),
             ),
-            child:
-                const Icon(Icons.search_off_rounded, size: 40, color: kPrimary),
+            child: const Icon(Icons.search_off_rounded,
+                size: 40, color: kPrimary),
           ),
           const SizedBox(height: 20),
           Text(
@@ -684,7 +898,7 @@ class _TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _tagColor(label);
-    final c = colors;
+    final c     = colors;
     return Container(
       margin: const EdgeInsets.only(right: 6, bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -712,8 +926,8 @@ class ToolCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = context.watch<LangService>().isArabic;
-    final c    = AppColors.of(context);
+    final isAr  = context.watch<LangService>().isArabic;
+    final c     = AppColors.of(context);
     final color = categoryColor(tool.category);
     final tags  = tool.displayTags(isAr);
 
@@ -728,7 +942,18 @@ class ToolCard extends StatelessWidget {
           highlightColor: color.withValues(alpha: 0.04),
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => ToolDetailScreen(tool: tool)),
+            PageRouteBuilder(
+              pageBuilder: (ctx2, a1, a2) => ToolDetailScreen(tool: tool),
+              transitionDuration: const Duration(milliseconds: 350),
+              transitionsBuilder: (ctx2, anim, a2, child) => SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                    parent: anim, curve: Curves.easeOutCubic)),
+                child: child,
+              ),
+            ),
           ),
           child: Container(
             decoration: BoxDecoration(
@@ -738,7 +963,6 @@ class ToolCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Gradient top accent
                 Container(
                   height: 3,
                   decoration: BoxDecoration(
@@ -757,26 +981,28 @@ class ToolCard extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Icon
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(13),
-                              border: Border.all(
-                                  color: color.withValues(alpha: 0.25),
-                                  width: 1),
-                            ),
-                            child: Center(
-                              child: Text(
-                                tool.icon,
-                                style: const TextStyle(fontSize: 24),
+                          // Icon with Hero
+                          Hero(
+                            tag: 'tool_icon_${tool.id}',
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(13),
+                                border: Border.all(
+                                    color: color.withValues(alpha: 0.25),
+                                    width: 1),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  tool.icon,
+                                  style: const TextStyle(fontSize: 24),
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Name + badges
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,7 +1066,7 @@ class ToolCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          // Favorite
+                          // Favorite with scale animation
                           Consumer<FavService>(
                             builder: (_, favs, _) {
                               final isFav = favs.isFav(tool.id);
@@ -861,14 +1087,21 @@ class ToolCard extends StatelessWidget {
                                             : c.border,
                                         width: 1),
                                   ),
-                                  child: Icon(
-                                    isFav
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_outline_rounded,
-                                    color: isFav
-                                        ? Colors.redAccent
-                                        : c.textTertiary,
-                                    size: 18,
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 250),
+                                    transitionBuilder: (child, anim) =>
+                                        ScaleTransition(
+                                            scale: anim, child: child),
+                                    child: Icon(
+                                      isFav
+                                          ? Icons.favorite_rounded
+                                          : Icons.favorite_outline_rounded,
+                                      key: ValueKey(isFav),
+                                      color: isFav
+                                          ? Colors.redAccent
+                                          : c.textTertiary,
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
                               );
@@ -896,6 +1129,28 @@ class ToolCard extends StatelessWidget {
                               .toList(),
                         ),
                       ],
+                      // View count
+                      Consumer<ViewCountService>(
+                        builder: (_, vc, _) {
+                          final count = vc.getCount(tool.id);
+                          if (count == 0) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.visibility_rounded,
+                                    size: 12, color: c.textTertiary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$count',
+                                  style: GoogleFonts.cairo(
+                                      fontSize: 11, color: c.textTertiary),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -909,14 +1164,93 @@ class ToolCard extends StatelessWidget {
 }
 
 // ─── Tool Detail Screen ───────────────────────────────────────────────────────
-class ToolDetailScreen extends StatelessWidget {
+class ToolDetailScreen extends StatefulWidget {
   final AiTool tool;
   const ToolDetailScreen({super.key, required this.tool});
 
   @override
+  State<ToolDetailScreen> createState() => _ToolDetailScreenState();
+}
+
+class _ToolDetailScreenState extends State<ToolDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ViewCountService>().increment(widget.tool.id);
+      context.read<RecentService>().add(widget.tool.id);
+    });
+  }
+
+  Future<void> _share(bool isAr) async {
+    final tool = widget.tool;
+    final text = isAr
+        ? '🤖 اكتشف ${tool.nameAr}!\n\n📝 ${tool.descriptionAr}\n\n🌐 الرابط: ${tool.url}\n\n📱 شاركني الفكرة من تطبيق AI Tools Hub'
+        : '🤖 Check out ${tool.nameEn}!\n\n📝 ${tool.descriptionEn}\n\n🌐 Link: ${tool.url}\n\n📱 Shared from AI Tools Hub app';
+    try {
+      await Share.share(text);
+    } catch (_) {}
+  }
+
+  Future<void> _copyLink(bool isAr) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: widget.tool.url));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isAr ? '✅ تم نسخ الرابط' : '✅ Link copied',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: const Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _launch(String url, bool isAr) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https') {
+      _showLaunchError(isAr);
+      return;
+    }
+    try {
+      final launched =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) _showLaunchError(isAr);
+    } on Exception {
+      if (mounted) _showLaunchError(isAr);
+    }
+  }
+
+  void _showLaunchError(bool isAr) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isAr ? 'تعذّر فتح الرابط' : 'Could not open the link',
+          style: GoogleFonts.cairo(),
+        ),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isAr = context.watch<LangService>().isArabic;
-    final c    = AppColors.of(context);
+    final isAr  = context.watch<LangService>().isArabic;
+    final c     = AppColors.of(context);
+    final tool  = widget.tool;
     final color = categoryColor(tool.category);
     final tags  = tool.displayTags(isAr);
 
@@ -933,6 +1267,12 @@ class ToolDetailScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
+              // Share button
+              IconButton(
+                icon: Icon(Icons.share_rounded, color: c.textSecondary),
+                onPressed: () => _share(isAr),
+              ),
+              // Favorite button
               Consumer<FavService>(
                 builder: (_, favs, _) {
                   final isFav = favs.isFav(tool.id);
@@ -948,7 +1288,8 @@ class ToolDetailScreen extends StatelessWidget {
                               ? Icons.favorite_rounded
                               : Icons.favorite_outline_rounded,
                           key: ValueKey(isFav),
-                          color: isFav ? Colors.redAccent : c.textSecondary,
+                          color:
+                              isFav ? Colors.redAccent : c.textSecondary,
                         ),
                       ),
                       onPressed: () => favs.toggle(tool.id),
@@ -961,10 +1302,7 @@ class ToolDetailScreen extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      color.withValues(alpha: 0.2),
-                      c.surface,
-                    ],
+                    colors: [color.withValues(alpha: 0.2), c.surface],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -977,27 +1315,31 @@ class ToolDetailScreen extends StatelessWidget {
                       Stack(
                         alignment: Alignment.topRight,
                         children: [
-                          Container(
-                            width: 84,
-                            height: 84,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                  color: color.withValues(alpha: 0.45),
-                                  width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.25),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
+                          // Hero animation on the icon
+                          Hero(
+                            tag: 'tool_icon_${tool.id}',
+                            child: Container(
+                              width: 84,
+                              height: 84,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                    color: color.withValues(alpha: 0.45),
+                                    width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.25),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  tool.icon,
+                                  style: const TextStyle(fontSize: 42),
                                 ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                tool.icon,
-                                style: const TextStyle(fontSize: 42),
                               ),
                             ),
                           ),
@@ -1066,7 +1408,6 @@ class ToolDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tags row
                   if (tags.isNotEmpty) ...[
                     Wrap(
                       children: tags
@@ -1075,7 +1416,6 @@ class ToolDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                   ],
-                  // Rating row
                   _InfoCard(
                     icon: Icons.star_rounded,
                     title: isAr ? 'التقييم' : 'Rating',
@@ -1085,7 +1425,7 @@ class ToolDetailScreen extends StatelessWidget {
                       children: [
                         ...List.generate(5, (i) {
                           final filled = i < tool.rating.floor();
-                          final half = !filled &&
+                          final half   = !filled &&
                               i < tool.rating &&
                               (tool.rating - i) >= 0.5;
                           return Icon(
@@ -1111,7 +1451,6 @@ class ToolDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // About card
                   _InfoCard(
                     icon: Icons.info_outline_rounded,
                     title: isAr ? 'عن الأداة' : 'About',
@@ -1127,7 +1466,6 @@ class ToolDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // URL card
                   _InfoCard(
                     icon: Icons.link_rounded,
                     title: isAr ? 'الموقع الرسمي' : 'Website',
@@ -1140,7 +1478,7 @@ class ToolDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  // Open button
+                  // Open in Browser
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -1159,7 +1497,7 @@ class ToolDetailScreen extends StatelessWidget {
                         ],
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: () => _launch(context, tool.url, isAr),
+                        onPressed: () => _launch(tool.url, isAr),
                         icon: const Icon(Icons.open_in_new_rounded, size: 20),
                         label: Text(
                           isAr ? 'فتح الموقع في المتصفح' : 'Open in Browser',
@@ -1176,7 +1514,29 @@ class ToolDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
+                  // Copy Link
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _copyLink(isAr),
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      label: Text(
+                        isAr ? 'نسخ الرابط' : 'Copy Link',
+                        style: GoogleFonts.cairo(
+                            fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: kPrimary,
+                        side: const BorderSide(color: kPrimary, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Go Back
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -1200,37 +1560,6 @@ class ToolDetailScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _launch(BuildContext context, String url, bool isAr) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null || uri.scheme != 'https') {
-      _showLaunchError(context, isAr);
-      return;
-    }
-    try {
-      final launched =
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched && context.mounted) _showLaunchError(context, isAr);
-    } on Exception {
-      if (context.mounted) _showLaunchError(context, isAr);
-    }
-  }
-
-  void _showLaunchError(BuildContext context, bool isAr) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isAr ? 'تعذّر فتح الرابط' : 'Could not open the link',
-          style: GoogleFonts.cairo(),
-        ),
-        backgroundColor: Colors.red.shade800,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -1295,9 +1624,9 @@ class FavoritesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<FavService, LangService>(
       builder: (_, favs, lang, _) {
-        final isAr     = lang.isArabic;
+        final isAr      = lang.isArabic;
         final favorites = favs.favorites;
-        final c        = AppColors.of(context);
+        final c         = AppColors.of(context);
 
         if (favorites.isEmpty) {
           return Center(
@@ -1330,8 +1659,8 @@ class FavoritesScreen extends StatelessWidget {
                   isAr
                       ? 'اضغط على ♡ لإضافة أدوات للمفضلة'
                       : 'Tap ♡ on any tool to save it here',
-                  style:
-                      GoogleFonts.cairo(color: c.textTertiary, fontSize: 14),
+                  style: GoogleFonts.cairo(
+                      color: c.textTertiary, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
               ],
