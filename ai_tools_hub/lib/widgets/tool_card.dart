@@ -6,6 +6,8 @@ import '../data/tools_data.dart';
 import '../models/ai_tool.dart';
 import '../screens/tool_detail_screen.dart';
 import '../services/app_service.dart';
+import '../services/compare_service.dart';
+import '../screens/compare_screen.dart';
 import '../theme/app_colors.dart';
 
 // ─── Tag Color ────────────────────────────────────────────────────────────────
@@ -307,6 +309,75 @@ class ToolCard extends StatelessWidget {
                               ],
                             ),
                           ),
+                          // Compare button
+                          Consumer2<CompareService, LangService>(
+                            builder: (ctx, compare, lang, _) {
+                              final isSelected = compare.selectedTool?.id == tool.id;
+                              return GestureDetector(
+                                onTap: () {
+                                  if (compare.selectedTool == null) {
+                                    compare.selectTool(tool);
+                                  } else if (compare.selectedTool!.id == tool.id) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                                      content: Text(
+                                        lang.isArabic
+                                            ? 'اختر أداة مختلفة'
+                                            : 'Choose a different tool',
+                                        style: GoogleFonts.cairo(),
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                      behavior: SnackBarBehavior.floating,
+                                    ));
+                                  } else {
+                                    final t1 = compare.selectedTool!;
+                                    compare.clearSelection();
+                                    Navigator.push(
+                                      ctx,
+                                      PageRouteBuilder(
+                                        pageBuilder: (c2, a1, a2) =>
+                                            CompareScreen(tool1: t1, tool2: tool),
+                                        transitionDuration:
+                                            const Duration(milliseconds: 350),
+                                        transitionsBuilder: (c2, anim, a2, child) =>
+                                            SlideTransition(
+                                          position: Tween<Offset>(
+                                            begin: const Offset(1, 0),
+                                            end: Offset.zero,
+                                          ).animate(CurvedAnimation(
+                                              parent: anim,
+                                              curve: Curves.easeOutCubic)),
+                                          child: child,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? kPrimary.withValues(alpha: 0.15)
+                                        : c.bg,
+                                    borderRadius: BorderRadius.circular(11),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? kPrimary.withValues(alpha: 0.3)
+                                          : c.border,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.compare_arrows_rounded,
+                                    color: isSelected ? kPrimary : c.textTertiary,
+                                    size: 18,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 6),
                           // Favorite with scale animation
                           Consumer<FavService>(
                             builder: (_, favs, _) {
