@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../data/tools_data.dart';
 import '../models/ai_tool.dart';
+import '../screens/compare_screen.dart';
 import '../screens/tool_detail_screen.dart';
 import '../services/app_service.dart';
 import '../services/compare_service.dart';
-import '../screens/compare_screen.dart';
 import '../theme/app_colors.dart';
 
 // ─── Tag Color ────────────────────────────────────────────────────────────────
