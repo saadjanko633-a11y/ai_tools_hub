@@ -11,6 +11,7 @@ import 'screens/settings_screen.dart';
 import 'screens/tool_detail_screen.dart';
 import 'screens/tools_list_screen.dart';
 import 'services/app_service.dart';
+import 'services/compare_service.dart';
 import 'theme/app_colors.dart';
 import 'widgets/hub_app_bar.dart';
 import 'models/ai_tool.dart';
@@ -95,6 +96,7 @@ void main() async {
       ChangeNotifierProvider(create: (_) => ThemeService(prefs)),
       ChangeNotifierProvider(create: (_) => ViewCountService(prefs)),
       ChangeNotifierProvider(create: (_) => RecentService(prefs)),
+      ChangeNotifierProvider(create: (_) => CompareService()),
     ],
     child: MyApp(seenOnboarding: seenOnboarding),
   ));
