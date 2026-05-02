@@ -8,8 +8,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/tools_data.dart';
 import '../models/ai_tool.dart';
 import '../services/app_service.dart';
+import '../services/compare_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tool_card.dart';
+import 'compare_screen.dart';
 
 class ToolDetailScreen extends StatefulWidget {
   final AiTool tool;
@@ -114,6 +116,64 @@ class _ToolDetailScreenState extends State<ToolDetailScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
+              // Compare button
+              Consumer2<CompareService, LangService>(
+                builder: (ctx, compare, lang, _) {
+                  final isSelected = compare.selectedTool?.id == tool.id;
+                  return IconButton(
+                    icon: Icon(
+                      Icons.compare_arrows_rounded,
+                      color: isSelected ? kPrimary : c.textSecondary,
+                    ),
+                    onPressed: () {
+                      if (compare.selectedTool == null) {
+                        compare.selectTool(tool);
+                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                          content: Text(
+                            lang.isArabic
+                                ? 'تم اختيار الأداة للمقارنة'
+                                : 'Tool selected for comparison',
+                            style: GoogleFonts.cairo(),
+                          ),
+                          duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ));
+                      } else if (compare.selectedTool!.id == tool.id) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                          content: Text(
+                            lang.isArabic
+                                ? 'اختر أداة مختلفة'
+                                : 'Choose a different tool',
+                            style: GoogleFonts.cairo(),
+                          ),
+                          duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ));
+                      } else {
+                        final t1 = compare.selectedTool!;
+                        compare.clearSelection();
+                        Navigator.push(
+                          ctx,
+                          PageRouteBuilder(
+                            pageBuilder: (c2, a1, a2) =>
+                                CompareScreen(tool1: t1, tool2: tool),
+                            transitionDuration: const Duration(milliseconds: 350),
+                            transitionsBuilder: (c2, anim, a2, child) =>
+                                SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(1, 0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                  parent: anim, curve: Curves.easeOutCubic)),
+                              child: child,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
               // Share button
               IconButton(
                 icon: Icon(Icons.share_rounded, color: c.textSecondary),
