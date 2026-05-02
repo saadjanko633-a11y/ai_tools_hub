@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -102,7 +103,10 @@ class CompareScreen extends StatelessWidget {
                     labelEn: 'Tags', labelAr: 'الوسوم',
                     left: _TagsCell(tags: tool1.displayTags(isAr), colors: c),
                     right: _TagsCell(tags: tool2.displayTags(isAr), colors: c),
-                    isDifferent: false,
+                    isDifferent: !setEquals(
+                      tool1.displayTags(isAr).toSet(),
+                      tool2.displayTags(isAr).toSet(),
+                    ),
                   ),
                   Divider(height: 1, color: c.border),
                   _CompareRow(
@@ -110,7 +114,7 @@ class CompareScreen extends StatelessWidget {
                     labelEn: 'Website', labelAr: 'الموقع',
                     left: _WebsiteCell(url: tool1.url, isAr: isAr),
                     right: _WebsiteCell(url: tool2.url, isAr: isAr),
-                    isDifferent: false,
+                    isDifferent: tool1.url != tool2.url,
                     isLast: true,
                   ),
                 ],
@@ -228,23 +232,25 @@ class _CompareRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: left,
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: left,
+                  ),
                 ),
-              ),
-              Container(width: 1, height: 32, color: c.border),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: right,
+                Container(width: 1, color: c.border),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: right,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -334,6 +340,16 @@ class _WebsiteCell extends StatelessWidget {
         final uri = Uri.tryParse(url);
         if (uri != null && await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                isAr ? 'تعذّر فتح الرابط' : 'Could not open link',
+                style: GoogleFonts.cairo(),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ));
+          }
         }
       },
       icon: const Icon(Icons.open_in_new_rounded, size: 14),
