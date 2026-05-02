@@ -10,6 +10,7 @@ import '../models/ai_tool.dart';
 import '../services/app_service.dart';
 import '../services/compare_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/tag_chip.dart';
 import '../widgets/tool_card.dart';
 import 'compare_screen.dart';
 
@@ -151,7 +152,6 @@ class _ToolDetailScreenState extends State<ToolDetailScreen> {
                         ));
                       } else {
                         final t1 = compare.selectedTool!;
-                        compare.clearSelection();
                         Navigator.push(
                           ctx,
                           PageRouteBuilder(
@@ -169,6 +169,7 @@ class _ToolDetailScreenState extends State<ToolDetailScreen> {
                             ),
                           ),
                         );
+                        compare.clearSelection();
                       }
                     },
                   );

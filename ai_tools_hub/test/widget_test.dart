@@ -64,5 +64,14 @@ void main() {
       service.removeListener(listener);
       expect(notified, isTrue);
     });
+
+    test('clearSelection when already null does not notify listeners', () {
+      var notified = false;
+      void listener() => notified = true;
+      service.addListener(listener);
+      service.clearSelection();
+      service.removeListener(listener);
+      expect(notified, isFalse);
+    });
   });
 }

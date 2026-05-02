@@ -8,7 +8,7 @@ import '../data/tools_data.dart';
 import '../models/ai_tool.dart';
 import '../services/app_service.dart';
 import '../theme/app_colors.dart';
-import '../widgets/tool_card.dart';
+import '../widgets/tag_chip.dart';
 
 class CompareScreen extends StatelessWidget {
   final AiTool tool1;
@@ -338,9 +338,7 @@ class _WebsiteCell extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: () async {
         final uri = Uri.tryParse(url);
-        if (uri != null && await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
+        if (uri == null || uri.scheme != 'https') {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(
@@ -350,7 +348,20 @@ class _WebsiteCell extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
             ));
           }
+          return;
         }
+        try {
+          final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (!launched && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                isAr ? 'تعذّر فتح الرابط' : 'Could not open link',
+                style: GoogleFonts.cairo(),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ));
+          }
+        } catch (_) {}
       },
       icon: const Icon(Icons.open_in_new_rounded, size: 14),
       label: Text(isAr ? 'فتح' : 'Open'),
