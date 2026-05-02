@@ -36,8 +36,10 @@ void main() {
 
     test('selectTool notifies listeners', () {
       var notified = false;
-      service.addListener(() => notified = true);
+      void listener() => notified = true;
+      service.addListener(listener);
       service.selectTool(toolA);
+      service.removeListener(listener);
       expect(notified, isTrue);
     });
 
@@ -56,8 +58,10 @@ void main() {
     test('clearSelection notifies listeners', () {
       service.selectTool(toolA);
       var notified = false;
-      service.addListener(() => notified = true);
+      void listener() => notified = true;
+      service.addListener(listener);
       service.clearSelection();
+      service.removeListener(listener);
       expect(notified, isTrue);
     });
   });
