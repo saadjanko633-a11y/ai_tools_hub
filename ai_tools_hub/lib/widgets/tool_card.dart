@@ -165,7 +165,8 @@ class _AnimatedCardState extends State<AnimatedCard>
 // ─── Tool Card ────────────────────────────────────────────────────────────────
 class ToolCard extends StatelessWidget {
   final AiTool tool;
-  const ToolCard({super.key, required this.tool});
+  final bool heroEnabled;
+  const ToolCard({super.key, required this.tool, this.heroEnabled = true});
 
   @override
   Widget build(BuildContext context) {
@@ -224,27 +225,8 @@ class ToolCard extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Icon with Hero
-                          Hero(
-                            tag: 'tool_icon_${tool.id}',
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(
-                                    color: color.withValues(alpha: 0.25),
-                                    width: 1),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  tool.icon,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
-                              ),
-                            ),
-                          ),
+                          // Icon with optional Hero
+                          _buildIcon(color),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -472,5 +454,20 @@ class ToolCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildIcon(Color color) {
+    final iconWidget = Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+      ),
+      child: Center(child: Text(tool.icon, style: const TextStyle(fontSize: 24))),
+    );
+    if (!heroEnabled) return iconWidget;
+    return Hero(tag: 'tool_icon_${tool.id}', child: iconWidget);
   }
 }

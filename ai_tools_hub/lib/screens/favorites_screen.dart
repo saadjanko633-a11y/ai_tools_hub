@@ -60,7 +60,7 @@ class FavoritesScreen extends StatelessWidget {
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           itemCount: favorites.length,
-          itemBuilder: (_, i) => ToolCard(tool: favorites[i]),
+          itemBuilder: (_, i) => ToolCard(tool: favorites[i], heroEnabled: false),
         );
       },
     );
