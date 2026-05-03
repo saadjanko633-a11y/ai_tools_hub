@@ -56,7 +56,12 @@ class ChatService extends ChangeNotifier {
       );
 
       final data    = jsonDecode(response.body) as Map<String, dynamic>;
-      final content = data['choices'][0]['message']['content'] as String;
+      final choices = data['choices'] as List<dynamic>?;
+      final msg     = choices?.isNotEmpty == true
+          ? (choices![0] as Map<String, dynamic>)['message'] as Map<String, dynamic>?
+          : null;
+      final content = msg?['content'] as String?;
+      if (content == null || content.isEmpty) throw FormatException('Empty response from API');
       messages.add(ChatMessage(
         text: content,
         isUser: false,
