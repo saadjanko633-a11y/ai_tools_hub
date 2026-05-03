@@ -24,6 +24,7 @@ migrate_working_dir/
 # Environment / secrets
 .env
 .env.*
+lib/config/api_config.dart
 
 # Flutter/Dart/Pub related
 **/doc/api/
