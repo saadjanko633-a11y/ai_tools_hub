@@ -5,6 +5,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../services/app_service.dart';
 import '../theme/app_colors.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -139,12 +141,19 @@ class SettingsScreen extends StatelessWidget {
               subtitle: isAr ? 'اطّلع على سياسة الخصوصية' : 'View our privacy policy',
               trailing: Icon(Icons.chevron_right_rounded,
                   color: scheme.textTertiary, size: 20),
-              onTap: () => _showPlaceholder(
-                context, scheme,
-                isAr ? 'سياسة الخصوصية' : 'Privacy Policy',
-                isAr
-                    ? 'سياسة الخصوصية ستكون متاحة قريباً.'
-                    : 'Privacy policy will be available soon.',
+              onTap: () => Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (ctx, a1, a2) => const PrivacyPolicyScreen(),
+                  transitionDuration: const Duration(milliseconds: 350),
+                  transitionsBuilder: (ctx, anim, a2, child) => SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                    child: child,
+                  ),
+                ),
               ),
             ),
             Divider(height: 1, color: scheme.border),
@@ -156,12 +165,19 @@ class SettingsScreen extends StatelessWidget {
               subtitle: isAr ? 'اقرأ شروط الاستخدام' : 'Read terms of use',
               trailing: Icon(Icons.chevron_right_rounded,
                   color: scheme.textTertiary, size: 20),
-              onTap: () => _showPlaceholder(
-                context, scheme,
-                isAr ? 'شروط الاستخدام' : 'Terms of Use',
-                isAr
-                    ? 'شروط الاستخدام ستكون متاحة قريباً.'
-                    : 'Terms of use will be available soon.',
+              onTap: () => Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (ctx, a1, a2) => const TermsScreen(),
+                  transitionDuration: const Duration(milliseconds: 350),
+                  transitionsBuilder: (ctx, anim, a2, child) => SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                    child: child,
+                  ),
+                ),
               ),
             ),
           ],
