@@ -39,9 +39,8 @@ class ChatService extends ChangeNotifier {
           .toList();
 
       final response = await http.post(
-        Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
+        Uri.parse(groqProxyUrl),
         headers: {
-          'Authorization': 'Bearer $groqApiKey',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
