@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/tools_data.dart';
 import 'models/ai_tool.dart';
+import 'screens/chat_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/recent_screen.dart';
@@ -16,6 +17,7 @@ import 'screens/settings_screen.dart';
 import 'screens/tool_detail_screen.dart';
 import 'screens/tools_list_screen.dart';
 import 'services/app_service.dart';
+import 'services/chat_service.dart';
 import 'services/compare_service.dart';
 import 'theme/app_colors.dart';
 import 'widgets/hub_app_bar.dart';
@@ -101,6 +103,7 @@ void main() async {
       ChangeNotifierProvider(create: (_) => ViewCountService(prefs)),
       ChangeNotifierProvider(create: (_) => RecentService(prefs)),
       ChangeNotifierProvider(create: (_) => CompareService()),
+      ChangeNotifierProvider(create: (_) => ChatService()),
     ],
     child: MyApp(seenOnboarding: seenOnboarding),
   ));
@@ -247,6 +250,22 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: _buildNav(isAr, c),
+      floatingActionButton: _tab == 0
+          ? FloatingActionButton(
+              backgroundColor: const Color(0xFF6366F1),
+              onPressed: () {
+                context.read<ChatService>().contextTool = null;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatScreen()),
+                );
+              },
+              child: const Icon(
+                Icons.smart_toy_rounded,
+                color: Colors.white,
+              ),
+            )
+          : null,
     );
   }
 

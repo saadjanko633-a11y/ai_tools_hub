@@ -8,10 +8,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/tools_data.dart';
 import '../models/ai_tool.dart';
 import '../services/app_service.dart';
+import '../services/chat_service.dart';
 import '../services/compare_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tag_chip.dart';
 import '../widgets/tool_card.dart';
+import 'chat_screen.dart';
 import 'compare_screen.dart';
 
 class ToolDetailScreen extends StatefulWidget {
@@ -173,6 +175,19 @@ class _ToolDetailScreenState extends State<ToolDetailScreen> {
                         compare.clearSelection();
                       }
                     },
+                  );
+                },
+              ),
+              // Chat button
+              IconButton(
+                icon: const Icon(Icons.chat_rounded,
+                    color: Color(0xFF6366F1)),
+                onPressed: () {
+                  Provider.of<ChatService>(context, listen: false)
+                      .contextTool = tool;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ChatScreen()),
                   );
                 },
               ),
