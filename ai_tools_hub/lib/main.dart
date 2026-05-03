@@ -1,9 +1,14 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'data/tools_data.dart';
+import 'models/ai_tool.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/recent_screen.dart';
@@ -14,7 +19,6 @@ import 'services/app_service.dart';
 import 'services/compare_service.dart';
 import 'theme/app_colors.dart';
 import 'widgets/hub_app_bar.dart';
-import 'models/ai_tool.dart';
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 ThemeData _darkTheme() {
@@ -113,7 +117,53 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _navKey = GlobalKey<NavigatorState>();
+  final _navKey  = GlobalKey<NavigatorState>();
+  final _appLinks = AppLinks();
+  StreamSubscription<Uri>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  void _initDeepLinks() async {
+    final initialUri = await _appLinks.getInitialLink();
+    if (initialUri != null && mounted) {
+      await Future.delayed(Duration.zero);
+      if (mounted) _handleLink(initialUri);
+    }
+    _linkSub = _appLinks.uriLinkStream.listen(_handleLink);
+  }
+
+  void _handleLink(Uri uri) {
+    if (uri.scheme != 'aitoolshub' || uri.host != 'tool') return;
+    final toolId = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+    if (toolId == null) return;
+    AiTool? tool;
+    try {
+      tool = kAllTools.firstWhere((t) => t.id == toolId);
+    } catch (_) {
+      return;
+    }
+    _navKey.currentState?.push(PageRouteBuilder(
+      pageBuilder: (ctx, a1, a2) => ToolDetailScreen(tool: tool!),
+      transitionDuration: const Duration(milliseconds: 350),
+      transitionsBuilder: (ctx, anim, a2, child) => SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1, 0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+        child: child,
+      ),
+    ));
+  }
 
   void _onOnboardingDone() {
     _navKey.currentState?.pushAndRemoveUntil(
