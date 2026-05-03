@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../data/tools_data.dart';
 import '../models/ai_tool.dart';
@@ -22,18 +23,23 @@ class ToolsListScreen extends StatefulWidget {
 }
 
 class _ToolsListScreenState extends State<ToolsListScreen> {
-  final _searchCtrl  = TextEditingController();
-  final _scrollCtrl  = ScrollController();
+  final _searchCtrl   = TextEditingController();
+  final _scrollCtrl   = ScrollController();
   String _query        = '';
   ToolCategory? _category;
   SortOrder _sortOrder = SortOrder.defaultOrder;
-  int _displayCount   = 20;
-  int _filteredLength = 0;
+  int _displayCount    = 20;
+  int _filteredLength  = 0;
+  bool _isInitialLoad  = true;
+  bool _showScrollTop  = false;
 
   @override
   void initState() {
     super.initState();
     _scrollCtrl.addListener(_onScroll);
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) setState(() => _isInitialLoad = false);
+    });
   }
 
   @override
@@ -49,11 +55,26 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
     if (pos.pixels >= pos.maxScrollExtent - 200 && _displayCount < _filteredLength) {
       setState(() => _displayCount += 20);
     }
+    final showTop = pos.pixels > 300;
+    if (showTop != _showScrollTop) setState(() => _showScrollTop = showTop);
+  }
+
+  void _clearSearch() {
+    _searchCtrl.clear();
+    setState(() { _query = ''; _displayCount = 20; });
+  }
+
+  void _scrollToTop() {
+    _scrollCtrl.animateTo(
+      0,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   List<AiTool> _filtered(bool isAr, ViewCountService viewCounts) {
     var list = kAllTools.where((t) {
-      final q        = _query.toLowerCase();
+      final q         = _query.toLowerCase();
       final nameMatch = t.localName(isAr).toLowerCase().contains(q);
       final descMatch = t.localDesc(isAr).toLowerCase().contains(q);
       final catMatch  = _category == null || t.category == _category;
@@ -93,32 +114,80 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
 
     return Column(
       children: [
-        if (showFeatured) _buildFeaturedSection(isAr, c),
+        if (showFeatured && !_isInitialLoad) _buildFeaturedSection(isAr, c),
         _buildSearchSection(isAr, c),
         Expanded(
-          child: filtered.isEmpty
-              ? _EmptyState(isArabic: isAr, colors: c)
-              : ListView.builder(
-                  controller: _scrollCtrl,
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: visible.length + (hasMore ? 1 : 0),
-                  itemBuilder: (_, i) {
-                    if (i == visible.length) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
+          child: _isInitialLoad
+              ? _buildShimmer(c)
+              : filtered.isEmpty
+                  ? _SearchEmptyState(
+                      isArabic: isAr,
+                      query: _query,
+                      colors: c,
+                      onClear: _clearSearch,
+                    )
+                  : Stack(
+                      children: [
+                        ListView.builder(
+                          controller: _scrollCtrl,
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                          itemCount: visible.length + (hasMore ? 1 : 0),
+                          itemBuilder: (_, i) {
+                            if (i == visible.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              );
+                            }
+                            return AnimatedCard(
+                              index: i,
+                              child: ToolCard(tool: visible[i]),
+                            );
+                          },
                         ),
-                      );
-                    }
-                    return AnimatedCard(
-                      index: i,
-                      child: ToolCard(tool: visible[i]),
-                    );
-                  },
-                ),
+                        // Enhancement 3: scroll-to-top FAB
+                        Positioned(
+                          bottom: 16,
+                          right: 16,
+                          child: IgnorePointer(
+                            ignoring: !_showScrollTop,
+                            child: AnimatedOpacity(
+                              opacity: _showScrollTop ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: FloatingActionButton.small(
+                                heroTag: 'scroll_to_top',
+                                backgroundColor: kPrimary,
+                                onPressed: _scrollToTop,
+                                child: const Icon(
+                                  Icons.keyboard_arrow_up_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
         ),
       ],
+    );
+  }
+
+  // Enhancement 1: shimmer placeholder list
+  Widget _buildShimmer(AppColors c) {
+    final isDark         = Theme.of(context).brightness == Brightness.dark;
+    final baseColor      = isDark ? const Color(0xFF1A1F3A) : const Color(0xFFE5E7EB);
+    final highlightColor = isDark ? const Color(0xFF2D3353) : const Color(0xFFF9FAFB);
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        itemCount: 6,
+        itemBuilder: (context, _) => const _ShimmerCard(),
+      ),
     );
   }
 
@@ -224,10 +293,7 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
             ? IconButton(
                 icon: Icon(Icons.cancel_rounded,
                     color: c.textTertiary, size: 20),
-                onPressed: () {
-                  _searchCtrl.clear();
-                  setState(() { _query = ''; _displayCount = 20; });
-                },
+                onPressed: _clearSearch,
               )
             : null,
         filled: true,
@@ -416,45 +482,150 @@ class _FeaturedCard extends StatelessWidget {
   }
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
-class _EmptyState extends StatelessWidget {
+// ─── Shimmer Placeholder Card (Enhancement 1) ─────────────────────────────────
+class _ShimmerCard extends StatelessWidget {
+  const _ShimmerCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 14,
+                  width: 130,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 11,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Container(
+                  height: 11,
+                  width: 170,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      height: 22,
+                      width: 58,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      height: 22,
+                      width: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Search Empty State (Enhancement 2) ──────────────────────────────────────
+class _SearchEmptyState extends StatelessWidget {
   final bool isArabic;
+  final String query;
   final AppColors colors;
-  const _EmptyState({required this.isArabic, required this.colors});
+  final VoidCallback onClear;
+
+  const _SearchEmptyState({
+    required this.isArabic,
+    required this.query,
+    required this.colors,
+    required this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = colors;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: c.card,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: c.border),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: c.textTertiary,
             ),
-            child: const Icon(Icons.search_off_rounded,
-                size: 40, color: kPrimary),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            isArabic ? 'لا توجد نتائج' : 'No results found',
-            style: GoogleFonts.cairo(
-              color: c.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+            const SizedBox(height: 16),
+            Text(
+              query.isNotEmpty
+                  ? (isArabic ? 'لا توجد نتائج لـ "$query"' : 'No results for "$query"')
+                  : (isArabic ? 'لا توجد نتائج' : 'No results found'),
+              style: GoogleFonts.cairo(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: c.textPrimary,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isArabic ? 'جرب البحث بكلمات أخرى' : 'Try different keywords',
-            style: GoogleFonts.cairo(color: c.textTertiary, fontSize: 14),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              isArabic ? 'جرّب كلمة مختلفة' : 'Try a different keyword',
+              style: GoogleFonts.cairo(fontSize: 14, color: c.textTertiary),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: onClear,
+              child: Text(
+                isArabic ? 'مسح البحث' : 'Clear search',
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: kPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
