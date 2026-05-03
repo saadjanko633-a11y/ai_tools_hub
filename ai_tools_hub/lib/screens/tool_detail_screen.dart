@@ -35,9 +35,10 @@ class _ToolDetailScreenState extends State<ToolDetailScreen> {
 
   Future<void> _share(bool isAr) async {
     final tool = widget.tool;
+    final deepLink = 'aitoolshub://tool/${tool.id}';
     final text = isAr
-        ? '🤖 اكتشف ${tool.nameAr}!\n\n📝 ${tool.descriptionAr}\n\n🌐 الرابط: ${tool.url}\n\n📱 شاركني الفكرة من تطبيق AI Tools Hub'
-        : '🤖 Check out ${tool.nameEn}!\n\n📝 ${tool.descriptionEn}\n\n🌐 Link: ${tool.url}\n\n📱 Shared from AI Tools Hub app';
+        ? '🤖 ${tool.nameAr}\n\n📝 ${tool.descriptionAr}\n\nافتح مباشرة: $deepLink\n🌐 الرابط: ${tool.url}\n\n📱 شاركني الفكرة من تطبيق AI Tools Hub'
+        : '🤖 ${tool.nameEn}\n\n📝 ${tool.descriptionEn}\n\nOpen directly: $deepLink\n🌐 Link: ${tool.url}\n\n📱 Shared from AI Tools Hub app';
     try {
       await Share.share(text);
     } catch (_) {}
