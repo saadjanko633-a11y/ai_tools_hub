@@ -176,6 +176,7 @@ class _InputRow extends StatelessWidget {
                 ),
                 onSubmitted: (_) => onSend(),
                 maxLines: null,
+                maxLength: 2000,
                 textInputAction: TextInputAction.send,
               ),
             ),
