@@ -22,15 +22,33 @@ class ToolsListScreen extends StatefulWidget {
 }
 
 class _ToolsListScreenState extends State<ToolsListScreen> {
-  final _searchCtrl = TextEditingController();
+  final _searchCtrl  = TextEditingController();
+  final _scrollCtrl  = ScrollController();
   String _query        = '';
   ToolCategory? _category;
   SortOrder _sortOrder = SortOrder.defaultOrder;
+  int _displayCount   = 20;
+  int _filteredLength = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
+    _scrollCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollCtrl.hasClients) return;
+    final pos = _scrollCtrl.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200 && _displayCount < _filteredLength) {
+      setState(() => _displayCount += 20);
+    }
   }
 
   List<AiTool> _filtered(bool isAr, ViewCountService viewCounts) {
@@ -68,6 +86,9 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
     final viewCounts = context.watch<ViewCountService>();
     final c          = AppColors.of(context);
     final filtered   = _filtered(isAr, viewCounts);
+    _filteredLength  = filtered.length;
+    final visible    = filtered.take(_displayCount).toList();
+    final hasMore    = visible.length < filtered.length;
     final showFeatured = _query.isEmpty && _category == null;
 
     return Column(
@@ -78,12 +99,23 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
           child: filtered.isEmpty
               ? _EmptyState(isArabic: isAr, colors: c)
               : ListView.builder(
+                  controller: _scrollCtrl,
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: filtered.length,
-                  itemBuilder: (_, i) => AnimatedCard(
-                    index: i,
-                    child: ToolCard(tool: filtered[i]),
-                  ),
+                  itemCount: visible.length + (hasMore ? 1 : 0),
+                  itemBuilder: (_, i) {
+                    if (i == visible.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
+                    return AnimatedCard(
+                      index: i,
+                      child: ToolCard(tool: visible[i]),
+                    );
+                  },
                 ),
         ),
       ],
@@ -154,7 +186,7 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
                   color: kPrimary,
                   selected: _category == null,
                   colors: c,
-                  onTap: () => setState(() => _category = null),
+                  onTap: () => setState(() { _category = null; _displayCount = 20; }),
                 ),
                 ...kCategories.map(
                   (cat) => CategoryChip(
@@ -163,8 +195,10 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
                     color: categoryColor(cat),
                     selected: _category == cat,
                     colors: c,
-                    onTap: () => setState(
-                        () => _category = _category == cat ? null : cat),
+                    onTap: () => setState(() {
+                      _category = _category == cat ? null : cat;
+                      _displayCount = 20;
+                    }),
                   ),
                 ),
               ],
@@ -178,7 +212,7 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
   Widget _buildSearchField(bool isAr, AppColors c) {
     return TextField(
       controller: _searchCtrl,
-      onChanged: (v) => setState(() => _query = v),
+      onChanged: (v) => setState(() { _query = v; _displayCount = 20; }),
       style: GoogleFonts.cairo(color: c.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: isAr ? 'ابحث عن أداة...' : 'Search tools...',
@@ -192,7 +226,7 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
                     color: c.textTertiary, size: 20),
                 onPressed: () {
                   _searchCtrl.clear();
-                  setState(() => _query = '');
+                  setState(() { _query = ''; _displayCount = 20; });
                 },
               )
             : null,
@@ -225,7 +259,7 @@ class _ToolsListScreenState extends State<ToolsListScreen> {
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(color: c.border),
       ),
-      onSelected: (v) => setState(() => _sortOrder = v),
+      onSelected: (v) => setState(() { _sortOrder = v; _displayCount = 20; }),
       itemBuilder: (_) => [
         _sortItem(SortOrder.defaultOrder, Icons.list_rounded,
             isAr ? 'الترتيب الافتراضي' : 'Default Order', c),
