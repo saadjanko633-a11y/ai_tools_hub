@@ -1,30 +1,77 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:ai_tools_hub/main.dart';
+import 'package:ai_tools_hub/services/compare_service.dart';
+import 'package:ai_tools_hub/models/ai_tool.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('placeholder', () {
+    test('arithmetic', () => expect(1 + 1, 2));
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  group('CompareService', () {
+    late CompareService service;
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    const toolA = AiTool(
+      id: 'a', nameEn: 'A', nameAr: 'أ',
+      descriptionEn: 'desc', descriptionAr: 'وصف',
+      category: ToolCategory.chat, icon: '🤖',
+      url: 'https://a.com', isFree: true, hasFreePlan: true, rating: 4.5,
+    );
+    const toolB = AiTool(
+      id: 'b', nameEn: 'B', nameAr: 'ب',
+      descriptionEn: 'desc', descriptionAr: 'وصف',
+      category: ToolCategory.coding, icon: '💻',
+      url: 'https://b.com', isFree: false, hasFreePlan: true, rating: 4.2,
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    setUp(() => service = CompareService());
+
+    test('initial selectedTool is null', () {
+      expect(service.selectedTool, isNull);
+    });
+
+    test('selectTool sets selectedTool', () {
+      service.selectTool(toolA);
+      expect(service.selectedTool, toolA);
+    });
+
+    test('selectTool notifies listeners', () {
+      var notified = false;
+      void listener() => notified = true;
+      service.addListener(listener);
+      service.selectTool(toolA);
+      service.removeListener(listener);
+      expect(notified, isTrue);
+    });
+
+    test('selectTool replaces previous selection', () {
+      service.selectTool(toolA);
+      service.selectTool(toolB);
+      expect(service.selectedTool, toolB);
+    });
+
+    test('clearSelection sets selectedTool to null', () {
+      service.selectTool(toolA);
+      service.clearSelection();
+      expect(service.selectedTool, isNull);
+    });
+
+    test('clearSelection notifies listeners', () {
+      service.selectTool(toolA);
+      var notified = false;
+      void listener() => notified = true;
+      service.addListener(listener);
+      service.clearSelection();
+      service.removeListener(listener);
+      expect(notified, isTrue);
+    });
+
+    test('clearSelection when already null does not notify listeners', () {
+      var notified = false;
+      void listener() => notified = true;
+      service.addListener(listener);
+      service.clearSelection();
+      service.removeListener(listener);
+      expect(notified, isFalse);
+    });
   });
 }
